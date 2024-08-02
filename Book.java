@@ -184,4 +184,30 @@ public class Book
     public int getCopiesAvailable(){
         return copiesAvailable;
     }
+    
+    /**
+     * Cuenta el número de palabras en un título.
+     * @param title el título del libro
+     * @return el número de palabras en el título
+     */
+    private int countWords(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return 0;
+        }
+        // Dividir el título en palabras y contar el número de palabras
+        return title.trim().split("\\s+").length; //este separa las palabras por los espacios
+        /*
+         * split crea una matriz con los elementos que separa, ene ste caso toma como separacion los espacios
+         * \\s+ manejas multiples espacios y tabulaciones
+         */
+    }
+    
+    /*
+     * este otro separa en caracteres(incluyendo espacios) y los cuenta
+     * String[] palabras = title.split("");
+     * return palabras.length();
+     */
+    
+    
+    
 }

@@ -42,19 +42,36 @@ public class Library
      */
     public void addBook(Book book)
     {
-        // chequea incorrectamente capacidad.
-        // no inserta ordenadamente
-        for(Book b : books){
-            int currId = b.getId();
-            if(currId == book.getId()){
-                throw new IllegalArgumentException("ya existe un libro con esa ID");
-            }
-            if(bookCapacity == books.size()){
-                throw new IllegalArgumentException("la biblioteca esta llena");
+        // Verificar la capacidad de la biblioteca
+        int totalCopies = 0;
+        for (Book b : books) {
+            totalCopies += b.getCopies();
+        }
+        if (totalCopies + book.getCopies() > bookCapacity) {
+            throw new IllegalArgumentException("La biblioteca está llena");
+        }
+    
+        // Verificar si ya existe un libro con el mismo ID
+        for (Book b : books) {
+            if (b.getId() == book.getId()) {
+                throw new IllegalArgumentException("Ya existe un libro con esa ID");
             }
         }
-        books.add(book);
-        assert repOK():"error en el metodo addBook";
+    
+        // Insertar el libro en la posición correcta para mantener la lista ordenada
+        int i = 0;
+        while (i < books.size() && books.get(i).getId() < book.getId()) {
+            i++;
+            /*
+             * siempre que el id de los elementos que va recorriendo el indice sea menor que el id del libro
+             * el indice sigue aumentando, cuando llega a un libro con una id que sea igual omayor entonces 
+             * agrega el libro en esa posicion
+             */
+        }
+        books.add(i, book);
+    
+        // Asegurarse de que la representación del objeto es correcta
+        assert repOK() : "Error en el método addBook";
     }
     
     /**
@@ -65,20 +82,29 @@ public class Library
      * candidad de copias disponibles en uno.
      * Importante: Este algoritmo debe tener complejidad O(log n) en el peor caso.
      */
-    public void lendBook(int id)
-    {
-        Book book = null;
-        for(int i = 0 ; i < books.size() ; i++){
-            int currBook = books.get(i).getId();
-            if(currBook != id){
-                throw new IllegalArgumentException("no existe un libro con esa ID"); // mal!
+    public void lendBook(int id) {
+        int low = 0;
+        int high = books.size() - 1; // Inicializa las variables para la búsqueda binaria
+        boolean lend = false;
+        while (low <= high && !lend) {
+            int mid = (high + low) / 2; // Calcula el índice medio
+            Book curr = books.get(mid); // Obtiene el libro en el índice medio
+            if (curr.getId() == id) { // Si el libro tiene el ID buscado
+                if (curr.getCopiesAvailable() == 0) { // Verifica si hay copias disponibles
+                    throw new IllegalArgumentException("no hay copias disponibles para prestar");
+                }
+                curr.lendCopy(); // Presta una copia del libro
+                lend = true; // Marca que el préstamo se ha realizado
+            } else if (curr.getId() < id) { // Si el ID del libro medio es menor que el ID buscado
+                low = mid + 1; // Ajusta el límite inferior de la búsqueda
+            } else { // Si el ID del libro medio es mayor que el ID buscado
+                high = mid - 1; // Ajusta el límite superior de la búsqueda
             }
-            if(books.get(i).getCopiesAvailable() < 1){
-                throw new IllegalArgumentException("no hay copias disponibles para prestar");
-            }
-            book = books.get(i);
         }
-        book.lendCopy();
+    
+        if (!lend) {
+            throw new IllegalArgumentException("No se encontró un libro con el ID especificado"); // Lanza excepción si no se realizó el préstamo
+        }
     }
     
     
@@ -94,20 +120,23 @@ public class Library
      */
     public Book mostWordsInTitle()
     {
-        // no calcula cantidad de palabras.
-        if(books == null  || books.size() <= 0){
-            throw new IllegalArgumentException("no hay libros en la biblioteca");
-        }
-        Book firstBook = null;
-        for(int i = 1 ; i < books.size() ; i++){
-        firstBook = books.get(0);
-        String currBook = books.get(i).getTitle();
-            if (currBook.length() > firstBook.getTitle().length()){
-                firstBook = books.get(i);
-            }
-        }
-        return firstBook;
+    if (books.isEmpty()) {
+        throw new IllegalStateException("La biblioteca no tiene libros almacenados");
     }
+
+    Book mostWordsBook = books.get(0);
+    int maxWords = countWords(mostWordsBook.getTitle());
+
+    for (Book book : books) {
+        int currentWords = countWords(book.getTitle()); //metodo countWords implementado en Book
+        if (currentWords > maxWords) {
+            mostWordsBook = book;
+            maxWords = currentWords;
+        }
+    }
+    return mostWordsBook;
+    }
+
     
     /**
      * Elimina de la biblioteca todos los libros cuyo autor coincida con el autor pasado como parámetro.
@@ -119,12 +148,29 @@ public class Library
         if(author == null || author.trim().isEmpty()){
             throw new IllegalArgumentException("no puede ingresar un autor nulo o vacio");
         }
-        for(int i = 0 ; i < books.size() ; i++){
+        int i = 0;
+        while(i < books.size()){
             if((books.get(i).getAuthor()).equals(author)){
                 books.remove(i);
+            }else{
+        i++;
             }
-        } // saltea posiblemente algunos libros.
+        }
     }
+    /*
+     * otra forma es con el iterator
+     * if(author == null || author.trim().isEmpty()){
+     *   throw new IllegalArgumentException("no puede ingresar un autor nulo o vacio");
+     *       }
+     *       Iterator<Book> iterator = books.iterator();
+     *       while(iterator.hasNext()){
+     *           Book book = iterator.next();
+     *           if(book.getAuthor().equals(author)){
+     *               iterator.remove();
+     *           }
+     *       }
+     *   }
+     */
     
     /**
      * Invariante de clase de Library (biblioteca). Una biblioteca se considera válida, o
