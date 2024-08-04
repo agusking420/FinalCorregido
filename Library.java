@@ -107,7 +107,29 @@ public class Library
         }
     }
     
+    /**
+     * Cuenta el número de palabras en un título.
+     * @param title el título del libro
+     * @return el número de palabras en el título
+     */
+    public int countWords(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return 0;
+        }
+        // Dividir el título en palabras y contar el número de palabras
+        return title.trim().split("\\s+").length; //este separa las palabras por los espacios
+        /*
+         * split crea una matriz con los elementos que separa, ene ste caso toma como separacion los espacios
+         * \\s+ manejas multiples espacios y tabulaciones
+         */
+    }
     
+    /*
+     * este otro separa en caracteres(incluyendo espacios) y los cuenta
+     * String[] palabras = title.split("");
+     * return palabras.length();
+     */
+   
     /**
      * Retorna el libro de la biblioteca con la mayor cantidad de palabras en el título.
      * Por ejemplo, "Rayuela" tiene una palabra, y "El Aleph" tiene dos palabras. Este método
@@ -120,21 +142,21 @@ public class Library
      */
     public Book mostWordsInTitle()
     {
-    if (books.isEmpty()) {
-        throw new IllegalStateException("La biblioteca no tiene libros almacenados");
-    }
-
-    Book mostWordsBook = books.get(0);
-    int maxWords = countWords(mostWordsBook.getTitle());
-
-    for (Book book : books) {
-        int currentWords = countWords(book.getTitle()); //metodo countWords implementado en Book
-        if (currentWords > maxWords) {
-            mostWordsBook = book;
-            maxWords = currentWords;
+        if (books.isEmpty()) {
+            throw new IllegalStateException("La biblioteca no tiene libros almacenados");
         }
-    }
-    return mostWordsBook;
+    
+        Book mostWordsBook = books.get(0);
+        int maxWords = countWords(mostWordsBook.getTitle());
+    
+        for (Book book : books) {
+            int currentWords = countWords(book.getTitle()); //metodo countWords implementado mas arriba
+            if (currentWords > maxWords) {
+                mostWordsBook = book;
+                maxWords = currentWords;
+            }
+        }
+        return mostWordsBook;
     }
 
     
@@ -180,27 +202,37 @@ public class Library
      * ejemplares de los libros no excede la capacidad de la biblioteca. 
      * @return true si y sólo si el objeto satisface el invariante de clase.
      */
-    public boolean repOK()
-    {
-        if(name == null || name.trim().isEmpty()){
+    public boolean repOK() {
+        // Verifica que el nombre no sea nulo ni vacío
+        if (name == null || name.trim().isEmpty()) {
             return false;
         }
-        if(bookCapacity <= 0){
+        // Verifica que la capacidad sea mayor a cero
+        if (bookCapacity <= 0) {
             return false;
         }
-        if(books == null){
+        // Verifica que la lista de libros no sea nula
+        if (books == null) {
             return false;
         }
-        for(Book b : books){
-            if(b == null){
+        // Verifica que la lista de libros no contenga null y que cada libro sea internamente consistente
+        int totalCopies = 0;
+        for (int i = 0; i < books.size(); i++) {
+            Book b = books.get(i);
+            if (b == null || !b.repOK()) {
                 return false;
             }
-            if(!b.repOK()){
+            // Verifica que los libros estén ordenados crecientemente por id
+            if (i > 0 && books.get(i - 1).getId() >= b.getId()) {
                 return false;
             }
+            // Suma la cantidad de copias de cada libro
+            totalCopies += b.getCopies();
+        }
+        // Verifica que la suma de ejemplares de los libros no exceda la capacidad de la biblioteca
+        if (totalCopies > bookCapacity) {
+            return false;
         }
         return true;
-        
-        // no chequea correctamente la capacidad.
-        }
     }
+}

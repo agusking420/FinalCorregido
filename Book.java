@@ -190,7 +190,7 @@ public class Book
      * @param title el título del libro
      * @return el número de palabras en el título
      */
-    private int countWords(String title) {
+    public int countWords(String title) {
         if (title == null || title.trim().isEmpty()) {
             return 0;
         }
